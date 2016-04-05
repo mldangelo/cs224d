@@ -16,19 +16,21 @@ def softmax(x):
     dimensional inputs (treat the vector as a row), you might find
     it helpful for your later problems.
 
-    You must implement the optimization in problem 1(a) of the 
+    You must implement the optimization in problem 1(a) of the
     written assignment!
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    x = np.reshape(x, (-1, np.shape(x)[-1]))
+    t = np.exp(x - np.reshape(np.max(x, axis=1),(-1,1)))
+    x = t / np.sum(t, axis=1)
     ### END YOUR CODE
-    
+
     return x
 
 def test_softmax_basic():
     """
-    Some simple tests to get you started. 
+    Some simple tests to get you started.
     Warning: these are not exhaustive.
     """
     print "Running basic tests..."
@@ -50,16 +52,16 @@ def test_softmax_basic():
     print "You should verify these results!\n"
 
 def test_softmax():
-    """ 
+    """
     Use this space to test your softmax implementation by running:
-        python q1_softmax.py 
+        python q1_softmax.py
     This function will not be called by the autograder, nor will
     your tests be graded.
     """
     print "Running your tests..."
     ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE  
+    # raise NotImplementedError
+    ### END YOUR CODE
 
 if __name__ == "__main__":
     test_softmax_basic()
