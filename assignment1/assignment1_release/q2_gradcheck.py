@@ -24,6 +24,7 @@ def gradcheck_naive(f, x):
         ### possible to test cost functions with built in randomness later
         ### YOUR CODE HERE:
         # raise NotImplementedError
+        # TODO revisit later 
         numgrad = (f(x[ix]+h)[0] - f(x[ix]-h)[0]) / (2*h)
         ### END YOUR CODE
 

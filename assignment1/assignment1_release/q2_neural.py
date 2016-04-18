@@ -26,8 +26,8 @@ def forward_backward_prop(data, labels, params, dimensions):
     b2 = np.reshape(params[ofs:ofs + Dy], (1, Dy))
 
     ### YOUR CODE HERE: forward propagation
-    print 'b1', b1.shape
-    print 'data', data * W1
+    print 'b1', b1.shape, W1.shape, data.shape, dimensions
+    print 'data', np.transpose(data)
 
     # print 'W1', W1
     # print 'b1', b1
