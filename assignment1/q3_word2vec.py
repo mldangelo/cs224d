@@ -51,9 +51,12 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
 
     ### YOUR CODE HERE
     t = np.exp(outputVectors.dot(predicted))
-    pred = t / np.sum(t) # predictions
+
+    pred = np.divide(t,np.sum(t))
+    cost = - np.log(pred[target])
+
     pred[target] -= 1.0
-    cost = - np.log(pred[target] + 1.0) # TODO - figure out why errors if this line is moved above
+
     gradPred = outputVectors.T.dot(pred)
     grad = pred.reshape((-1,1)).dot(predicted.reshape((1,-1)))
     ### END YOUR CODE
@@ -78,7 +81,8 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     # assignment!
 
     ### YOUR CODE HERE
-    
+
+    # TODO Still not sure about this, revisit later
     t = sigmoid(outputVectors[target].dot(predicted)) - 1.0
 
     grad = np.zeros(outputVectors.shape)
