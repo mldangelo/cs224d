@@ -22,10 +22,11 @@ def softmax(x):
   """
 
   ### YOUR CODE HERE
-  raise NotImplementedError
+  e = tf.exp(x - tf.expand_dims(tf.reduce_max(x, reduction_indices=[1]), dim=1), name=None)
+  out = tf.div(e, tf.reduce_sum(e,reduction_indices=[1]))
   ### END YOUR CODE
-  
-  return out 
+
+  return out
 
 def cross_entropy_loss(y, yhat):
   """
@@ -50,14 +51,14 @@ def cross_entropy_loss(y, yhat):
           tensor in the problem.
   """
   ### YOUR CODE HERE
-  raise NotImplementedError
+  out = - tf.reduce_sum(tf.mul(tf.to_float(y),tf.log(yhat)))
   ### END YOUR CODE
   return out
 
 
 def test_softmax_basic():
   """
-  Some simple tests to get you started. 
+  Some simple tests to get you started.
   Warning: these are not exhaustive.
   """
   print "Running basic tests..."
