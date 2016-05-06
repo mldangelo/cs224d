@@ -23,7 +23,7 @@ def softmax(x):
 
   ### YOUR CODE HERE
   e = tf.exp(x - tf.expand_dims(tf.reduce_max(x, reduction_indices=[1]), dim=1), name=None)
-  out = tf.div(e, tf.reduce_sum(e,reduction_indices=[1]))
+  out = tf.div(e, tf.reshape(tf.reduce_sum(e,reduction_indices=[1]), (-1, 1)))
   ### END YOUR CODE
 
   return out
