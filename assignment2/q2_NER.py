@@ -19,14 +19,14 @@ class Config(object):
   instantiation.
   """
   embed_size = 50
-  batch_size = 64
+  batch_size = 128
   label_size = 5
   hidden_size = 100
-  max_epochs = 24
-  early_stopping = 2
-  dropout = 0.9
-  lr = 0.001
-  l2 = 0.001
+  max_epochs = 30
+  early_stopping = 3
+  dropout = 0.8
+  lr = 0.0005
+  l2 = 0.002
   window_size = 3
 
 class NERModel(LanguageModel):
@@ -157,10 +157,9 @@ class NERModel(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      # TODO Change this
       L = tf.Variable(tf.convert_to_tensor(self.wv, dtype=tf.float32), name="embedding")
-      window_tensor = tf.nn.embedding_lookup(L, self.input_placeholder)
-      window = tf.reshape(window_tensor, (-1 , self.config.embed_size * self.config.window_size))
+      window = tf.reshape(tf.nn.embedding_lookup(L, self.input_placeholder),
+        (-1 , self.config.embed_size * self.config.window_size))
       ### END YOUR CODE
       return window
 
@@ -193,25 +192,22 @@ class NERModel(LanguageModel):
     """
     ### YOUR CODE HERE
     xavier_initializer = xavier_weight_init()
+
     with tf.variable_scope("Layer"):
-    	W = tf.Variable(xavier_initializer((self.config.window_size * self.config.embed_size, self.config.hidden_size)), "W")
-    	b1 = tf.Variable(xavier_initializer((self.config.hidden_size,)), "b1")
-
-    z = tf.matmul(window, W) + b1
-
-    z_dropout = tf.nn.dropout(z, self.dropout_placeholder)
-    h = tf.nn.tanh(z_dropout)
-
-    h_dropout = tf.nn.dropout(h, self.dropout_placeholder)
+        W = tf.Variable(xavier_initializer((self.config.window_size * self.config.embed_size, self.config.hidden_size)), "W")
+        b1 = tf.Variable(xavier_initializer((self.config.hidden_size,)), "b1")
 
     with tf.variable_scope("softmax"):
-    	U = tf.Variable(xavier_initializer((self.config.hidden_size, self.config.label_size)), "U")
-    	b2 = tf.Variable(xavier_initializer((self.config.label_size,)), "b2")
+        U = tf.Variable(xavier_initializer((self.config.hidden_size, self.config.label_size)), "U")
+        b2 = tf.Variable(xavier_initializer((self.config.label_size,)), "b2")
 
-    reg_sum = tf.reduce_sum(U ** 2) + tf.reduce_sum(W ** 2)
-    tf.add_to_collection("reg_sum", reg_sum)
 
-    output = tf.matmul(h_dropout, U) + b2
+    h = tf.nn.dropout(tf.nn.tanh(tf.nn.dropout(tf.matmul(window, W) + b1,
+        self.dropout_placeholder)), self.dropout_placeholder)
+
+    tf.add_to_collection("reg", tf.reduce_sum(tf.pow(U,2)) + tf.reduce_sum(tf.pow(W,2)))
+
+    output = tf.matmul(h, U) + b2
     ### END YOUR CODE
     return output
 
@@ -226,11 +222,9 @@ class NERModel(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    softmax_cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, self.labels_placeholder)
-    softmax_loss = tf.reduce_mean(softmax_cross_entropy)
-
-    reg_sum = tf.get_collection("reg_sum")[0]
-    loss = softmax_loss + 1.0 / 2 * self.config.l2 * reg_sum
+    soft = tf.nn.softmax_cross_entropy_with_logits(y, self.labels_placeholder)
+    reg = tf.get_collection("reg")[0]
+    loss = tf.reduce_mean(soft) + 0.5 * self.config.l2 * reg
     ### END YOUR CODE
     return loss
 
@@ -254,7 +248,8 @@ class NERModel(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    train_op = tf.train.AdamOptimizer(learning_rate=self.config.lr).minimize(loss)
+    train_op = tf.train.AdamOptimizer(learning_rate=self.config.lr)
+        .minimize(loss)
     ### END YOUR CODE
     return train_op
 
