@@ -22,7 +22,7 @@ class Config(object):
   batch_size = 64
   label_size = 5
   hidden_size = 100
-  max_epochs = 24 
+  max_epochs = 24
   early_stopping = 2
   dropout = 0.9
   lr = 0.001
@@ -84,7 +84,7 @@ class NERModel(LanguageModel):
                          type tf.float32
 
     Add these placeholders to self as the instance variables
-  
+
       self.input_placeholder
       self.labels_placeholder
       self.dropout_placeholder
@@ -92,7 +92,11 @@ class NERModel(LanguageModel):
     (Don't change the variable names)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    self.input_placeholder = tf.placeholder(tf.int32,
+        shape=(None, self.config.window_size))
+    self.labels_placeholder = tf.placeholder(tf.float32,
+        shape=(None, self.config.label_size))
+    self.dropout_placeholder = tf.placeholder(tf.float32)
     ### END YOUR CODE
 
   def create_feed_dict(self, input_batch, dropout, label_batch=None):
@@ -109,7 +113,7 @@ class NERModel(LanguageModel):
     Hint: The keys for the feed_dict should be a subset of the placeholder
           tensors created in add_placeholders.
     Hint: When label_batch is None, don't add a labels entry to the feed_dict.
-    
+
     Args:
       input_batch: A batch of input data.
       label_batch: A batch of label data.
@@ -117,7 +121,12 @@ class NERModel(LanguageModel):
       feed_dict: The feed dictionary mapping from placeholders to values.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    feed_dict = {
+        self.input_placeholder: input_batch,
+        self.dropout_placeholder: dropout,
+    }
+    if(label_batch is not None):
+        feed_dict[self.labels_placeholder] = label_batch
     ### END YOUR CODE
     return feed_dict
 
@@ -148,7 +157,10 @@ class NERModel(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      raise NotImplementedError
+      # TODO Change this
+      L = tf.Variable(tf.convert_to_tensor(self.wv, dtype=tf.float32), name="embedding")
+      window_tensor = tf.nn.embedding_lookup(L, self.input_placeholder)
+      window = tf.reshape(window_tensor, (-1 , self.config.embed_size * self.config.window_size))
       ### END YOUR CODE
       return window
 
@@ -180,9 +192,28 @@ class NERModel(LanguageModel):
       output: tf.Tensor of shape (batch_size, label_size)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    xavier_initializer = xavier_weight_init()
+    with tf.variable_scope("Layer"):
+    	W = tf.Variable(xavier_initializer((self.config.window_size * self.config.embed_size, self.config.hidden_size)), "W")
+    	b1 = tf.Variable(xavier_initializer((self.config.hidden_size,)), "b1")
+
+    z = tf.matmul(window, W) + b1
+
+    z_dropout = tf.nn.dropout(z, self.dropout_placeholder)
+    h = tf.nn.tanh(z_dropout)
+
+    h_dropout = tf.nn.dropout(h, self.dropout_placeholder)
+
+    with tf.variable_scope("softmax"):
+    	U = tf.Variable(xavier_initializer((self.config.hidden_size, self.config.label_size)), "U")
+    	b2 = tf.Variable(xavier_initializer((self.config.label_size,)), "b2")
+
+    reg_sum = tf.reduce_sum(U ** 2) + tf.reduce_sum(W ** 2)
+    tf.add_to_collection("reg_sum", reg_sum)
+
+    output = tf.matmul(h_dropout, U) + b2
     ### END YOUR CODE
-    return output 
+    return output
 
   def add_loss_op(self, y):
     """Adds cross_entropy_loss ops to the computational graph.
@@ -195,7 +226,11 @@ class NERModel(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    softmax_cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, self.labels_placeholder)
+    softmax_loss = tf.reduce_mean(softmax_cross_entropy)
+
+    reg_sum = tf.get_collection("reg_sum")[0]
+    loss = softmax_loss + 1.0 / 2 * self.config.l2 * reg_sum
     ### END YOUR CODE
     return loss
 
@@ -204,7 +239,7 @@ class NERModel(LanguageModel):
 
     Creates an optimizer and applies the gradients to all trainable variables.
     The Op returned by this function is what must be passed to the
-    `sess.run()` call to cause the model to train. See 
+    `sess.run()` call to cause the model to train. See
 
     https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#Optimizer
 
@@ -219,7 +254,7 @@ class NERModel(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    train_op = tf.train.AdamOptimizer(learning_rate=self.config.lr).minimize(loss)
     ### END YOUR CODE
     return train_op
 
@@ -356,7 +391,7 @@ def test_NER():
           best_val_epoch = epoch
           if not os.path.exists("./weights"):
             os.makedirs("./weights")
-        
+
           saver.save(session, './weights/ner.weights')
         if epoch - best_val_epoch > config.early_stopping:
           break
@@ -364,7 +399,7 @@ def test_NER():
         confusion = calculate_confusion(config, predictions, model.y_dev)
         print_confusion(confusion, model.num_to_tag)
         print 'Total time: {}'.format(time.time() - start)
-      
+
       saver.restore(session, './weights/ner.weights')
       print 'Test'
       print '=-=-='
