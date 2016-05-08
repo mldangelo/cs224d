@@ -248,8 +248,7 @@ class NERModel(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    train_op = tf.train.AdamOptimizer(learning_rate=self.config.lr)
-        .minimize(loss)
+    train_op = tf.train.AdamOptimizer(learning_rate=self.config.lr).minimize(loss)
     ### END YOUR CODE
     return train_op
 
