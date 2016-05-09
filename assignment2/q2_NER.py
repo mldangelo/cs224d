@@ -19,14 +19,14 @@ class Config(object):
   instantiation.
   """
   embed_size = 50
-  batch_size = 128
+  batch_size = 64
   label_size = 5
   hidden_size = 100
-  max_epochs = 30
-  early_stopping = 3
-  dropout = 0.8
-  lr = 0.0005
-  l2 = 0.002
+  max_epochs = 24
+  early_stopping = 2
+  dropout = 0.9
+  lr = 0.001
+  l2 = 0.001
   window_size = 3
 
 class NERModel(LanguageModel):
