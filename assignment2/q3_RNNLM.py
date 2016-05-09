@@ -311,7 +311,14 @@ def generate_text(session, model, config, starting_text='<eos>',
   tokens = [model.vocab.encode(word) for word in starting_text.split()]
   for i in xrange(stop_length):
     ### YOUR CODE HERE
-    raise NotImplementedError
+    feed_dict = {
+        model.input_placeholder: np.reshape(tokens[i], (1, 1)),
+        model.initial_state: state,
+        model.dropout_placeholder: 1.0,
+        }
+    state, y_pred = session.run([model.final_state, model.predictions[-1]], feed_dict=feed_dict)
+    if i + 1 == len(tokens):
+      break;
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
     tokens.append(next_word_idx)
