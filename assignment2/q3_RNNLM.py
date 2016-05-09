@@ -134,10 +134,9 @@ class RNNLM_Model(LanguageModel):
     """
     ### YOUR CODE HERE
     with tf.variable_scope('PROJ'):
-        v_len = len(self.vocab)
-        U = tf.get_variable('U', shape=(self.config.hidden_size, v_len))
-        b_2 = tf.get_variable('b_2', shape=(v_len,))
-    outputs = [(tf.matmul(h, U) + b_2) for h in rnn_outputs]
+        U = tf.get_variable('U', shape=(self.config.hidden_size, len(self.vocab)))
+        b_2 = tf.get_variable('b_2', shape=(len(self.vocab),))
+    outputs = [(tf.matmul(z, U) + b_2) for z in rnn_outputs]
     ### END YOUR CODE
     return outputs
 
@@ -152,7 +151,8 @@ class RNNLM_Model(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    loss = sequence_loss([output],
+    loss = sequence_loss(
+        [output],
         [tf.to_int32(tf.reshape(tf.concat(0, self.labels_placeholder), [-1]))],
         [tf.ones([])])
     ### END YOUR CODE
@@ -311,7 +311,7 @@ def generate_text(session, model, config, starting_text='<eos>',
   for i in xrange(stop_length):
     ### YOUR CODE HERE
     feed_dict = {
-        model.input_placeholder: np.reshape(tokens[i], (1, 1)),
+        model.input_placeholder: tf.reshape(tokens[i], (1, 1)),
         model.initial_state: state,
         model.dropout_placeholder: 1.0,
         }
