@@ -29,7 +29,7 @@ class Config(object):
   num_steps = 10
   max_epochs = 20
   early_stopping = 3
-  dropout = 0.975
+  dropout = 0.75
   lr = 0.0018
 
 class RNNLM_Model(LanguageModel):
