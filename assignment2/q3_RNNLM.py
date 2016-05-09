@@ -132,7 +132,6 @@ class RNNLM_Model(LanguageModel):
                (batch_size, len(vocab)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
     with tf.variable_scope("Projection"):
         U = tf.get_variable("U", shape=(self.config.hidden_size, len(self.vocab)))
         b2 = tf.get_variable("b2", shape=(len(self.vocab),))
