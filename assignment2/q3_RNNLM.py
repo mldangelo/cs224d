@@ -25,10 +25,10 @@ class Config(object):
   """
   batch_size = 64
   embed_size = 50
-  hidden_size = 120
+  hidden_size = 130
   num_steps = 10
   max_epochs = 20
-  early_stopping = 2
+  early_stopping = 3
   dropout = 0.95
   lr = 0.0015
 
@@ -80,11 +80,11 @@ class RNNLM_Model(LanguageModel):
     """
     ### YOUR CODE HERE
     self.input_placeholder = tf.placeholder(tf.int32,
-        shape=(None, self.config.num_steps), name="input")
+        shape=(None, self.config.num_steps), name='input')
     self.labels_placeholder = tf.placeholder(tf.float32,
-        shape=(None, self.config.num_steps), name="labels")
+        shape=(None, self.config.num_steps), name='labels')
     self.dropout_placeholder = tf.placeholder(tf.float32,
-        shape=(None), name="dropout")
+        shape=(None), name='dropout')
     ### END YOUR CODE
 
   def add_embedding(self):
@@ -106,9 +106,10 @@ class RNNLM_Model(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      L = tf.get_variable("L", shape=(len(self.vocab), self.config.embed_size))
-      inputs = [tf.squeeze(x, squeeze_dims=[1]) for x in tf.split(1, self.config.num_steps,
-            tf.nn.embedding_lookup(L, self.input_placeholder))]
+      inputs = [tf.squeeze(x, squeeze_dims=[1]) for x in tf.split(1,
+        self.config.num_steps, tf.nn.embedding_lookup(tf.get_variable('L',
+        shape=(len(self.vocab), self.config.embed_size)),
+        self.input_placeholder))]
       ### END YOUR CODE
       return inputs
 
@@ -132,10 +133,11 @@ class RNNLM_Model(LanguageModel):
                (batch_size, len(vocab)
     """
     ### YOUR CODE HERE
-    with tf.variable_scope("Projection"):
-        U = tf.get_variable("U", shape=(self.config.hidden_size, len(self.vocab)))
-        b2 = tf.get_variable("b2", shape=(len(self.vocab),))
-        outputs = [ tf.matmul(h, U) + b2 for h in rnn_outputs ]
+    with tf.variable_scope('PROJ'):
+        v_len = len(self.vocab)
+        U = tf.get_variable('U', shape=(self.config.hidden_size, v_len))
+        b_2 = tf.get_variable('b_2', shape=(v_len,))
+    outputs = [(tf.matmul(h, U) + b_2) for h in rnn_outputs]
     ### END YOUR CODE
     return outputs
 
