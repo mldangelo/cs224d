@@ -159,7 +159,7 @@ class NERModel(LanguageModel):
       ### YOUR CODE HERE
       L = tf.Variable(tf.convert_to_tensor(self.wv, dtype=tf.float32), name="embedding")
       window = tf.reshape(tf.nn.embedding_lookup(L, self.input_placeholder),
-        (-1 , self.config.embed_size * self.config.window_size))
+        (-1 , self.config.window_size * self.config.embed_size))
       ### END YOUR CODE
       return window
 
@@ -201,7 +201,6 @@ class NERModel(LanguageModel):
         U = tf.Variable(xavier_initializer((self.config.hidden_size, self.config.label_size)), "U")
         b2 = tf.Variable(xavier_initializer((self.config.label_size,)), "b2")
 
-
     h = tf.nn.dropout(tf.nn.tanh(tf.nn.dropout(tf.matmul(window, W) + b1,
         self.dropout_placeholder)), self.dropout_placeholder)
 
@@ -223,8 +222,7 @@ class NERModel(LanguageModel):
     """
     ### YOUR CODE HERE
     soft = tf.nn.softmax_cross_entropy_with_logits(y, self.labels_placeholder)
-    reg = tf.get_collection("reg")[0]
-    loss = tf.reduce_mean(soft) + 0.5 * self.config.l2 * reg
+    loss = tf.reduce_mean(soft) + 0.5 * self.config.l2 * tf.get_collection("reg")[0]
     ### END YOUR CODE
     return loss
 
