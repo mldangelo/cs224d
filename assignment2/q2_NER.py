@@ -157,7 +157,7 @@ class NERModel(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      L = tf.Variable(tf.convert_to_tensor(self.wv, dtype=tf.float32), name="embedding")
+      L = tf.Variable(tf.convert_to_tensor(self.wv, dtype=tf.float32), name='embedding')
       window = tf.reshape(tf.nn.embedding_lookup(L, self.input_placeholder),
         (-1 , self.config.window_size * self.config.embed_size))
       ### END YOUR CODE
@@ -191,20 +191,20 @@ class NERModel(LanguageModel):
       output: tf.Tensor of shape (batch_size, label_size)
     """
     ### YOUR CODE HERE
-    xavier_initializer = xavier_weight_init()
+    init = xavier_weight_init()
 
-    with tf.variable_scope("Layer"):
-        W = tf.Variable(xavier_initializer((self.config.window_size * self.config.embed_size, self.config.hidden_size)), "W")
-        b1 = tf.Variable(xavier_initializer((self.config.hidden_size,)), "b1")
+    with tf.variable_scope('Layer'):
+        W = tf.Variable(init((self.config.window_size * self.config.embed_size, self.config.hidden_size)), 'W')
+        b1 = tf.Variable(init((self.config.hidden_size,)), 'b1')
 
-    with tf.variable_scope("softmax"):
-        U = tf.Variable(xavier_initializer((self.config.hidden_size, self.config.label_size)), "U")
-        b2 = tf.Variable(xavier_initializer((self.config.label_size,)), "b2")
+    with tf.variable_scope('Softmax'):
+        U = tf.Variable(init((self.config.hidden_size, self.config.label_size)), 'U')
+        b2 = tf.Variable(init((self.config.label_size,)), 'b2')
 
     h = tf.nn.dropout(tf.nn.tanh(tf.nn.dropout(tf.matmul(window, W) + b1,
         self.dropout_placeholder)), self.dropout_placeholder)
 
-    tf.add_to_collection("reg", tf.reduce_sum(tf.pow(U,2)) + tf.reduce_sum(tf.pow(W,2)))
+    tf.add_to_collection('reg', tf.reduce_sum(tf.pow(U,2)) + tf.reduce_sum(tf.pow(W,2)))
 
     output = tf.matmul(h, U) + b2
     ### END YOUR CODE
