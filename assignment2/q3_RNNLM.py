@@ -150,10 +150,9 @@ class RNNLM_Model(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    labels_in_steps = tf.reshape(tf.concat(0, self.labels_placeholder), [-1])
-    targets = [tf.to_int32(labels_in_steps)]
-    weights = [tf.ones([])]
-    loss = sequence_loss([output], targets, weights)
+    loss = sequence_loss([output],
+        [tf.to_int32(tf.reshape(tf.concat(0, self.labels_placeholder), [-1]))],
+        [tf.ones([])])
     ### END YOUR CODE
     return loss
 
@@ -177,7 +176,7 @@ class RNNLM_Model(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    train_op = tf.train.AdamOptimizer(self.config.lr).minimize(loss, name="train_op")
+    train_op = tf.train.AdamOptimizer(self.config.lr).minimize(loss, name='train_op')
     ### END YOUR CODE
     return train_op
 
@@ -239,21 +238,19 @@ class RNNLM_Model(LanguageModel):
                a tensor of shape (batch_size, hidden_size)
     """
     ### YOUR CODE HERE
-    hidden_size = self.config.hidden_size
-    with tf.variable_scope("RNN"):
-        H = tf.get_variable("H", shape=(hidden_size, hidden_size))
-        I = tf.get_variable("I", shape=(self.config.embed_size, hidden_size))
-        b1 = tf.get_variable("b1", shape=(hidden_size,))
+    self.initial_state = tf.zeros([self.config.batch_size, self.config.hidden_size], name='initial_state')
 
-    self.initial_state = tf.zeros([self.config.batch_size, hidden_size], name="initial_state")
+    with tf.variable_scope('RNN'):
+        H = tf.get_variable('H', shape=(self.config.hidden_size, self.config.hidden_size))
+        I = tf.get_variable('I', shape=(self.config.embed_size, self.config.hidden_size))
+        b_1 = tf.get_variable('b_1', shape=(self.config.hidden_size,))
 
-    prev_h = self.initial_state
     rnn_outputs = []
-    for step in inputs:
-        step = tf.nn.dropout(step, self.dropout_placeholder)
-        prev_h = tf.sigmoid(tf.matmul(prev_h, H, name="mulH") + tf.matmul(step, I, name="mulI") + b1)
-        rnn_outputs.append(tf.nn.dropout(prev_h, self.dropout_placeholder))
-    self.final_state = prev_h
+    self.final_state = self.initial_state
+    for t in inputs:
+        self.final_state = tf.sigmoid(tf.matmul(self.final_state, H) + \
+            tf.matmul(tf.nn.dropout(t, self.dropout_placeholder), I) + b1)
+        rnn_outputs.append(tf.nn.dropout(self.final_state, self.dropout_placeholder))
     ### END YOUR CODE
     return rnn_outputs
 
@@ -316,9 +313,9 @@ def generate_text(session, model, config, starting_text='<eos>',
         model.initial_state: state,
         model.dropout_placeholder: 1.0,
         }
-    state, y_pred = session.run([model.final_state, model.predictions[-1]], feed_dict=feed_dict)
+    _, y_pred = session.run([model.final_state, model.predictions[-1]], feed_dict=feed_dict)
     if i + 1 != len(tokens):
-      continue;
+       continue
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
     tokens.append(next_word_idx)
