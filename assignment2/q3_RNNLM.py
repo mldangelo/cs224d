@@ -25,12 +25,12 @@ class Config(object):
   """
   batch_size = 64
   embed_size = 50
-  hidden_size = 100
+  hidden_size = 120
   num_steps = 10
-  max_epochs = 16
+  max_epochs = 20
   early_stopping = 2
-  dropout = 0.9
-  lr = 0.001
+  dropout = 0.95
+  lr = 0.0015
 
 class RNNLM_Model(LanguageModel):
 
@@ -317,8 +317,8 @@ def generate_text(session, model, config, starting_text='<eos>',
         model.dropout_placeholder: 1.0,
         }
     state, y_pred = session.run([model.final_state, model.predictions[-1]], feed_dict=feed_dict)
-    if i + 1 == len(tokens):
-      break;
+    if i + 1 != len(tokens):
+      continue;
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
     tokens.append(next_word_idx)
