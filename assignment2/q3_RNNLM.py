@@ -25,12 +25,12 @@ class Config(object):
   """
   batch_size = 64
   embed_size = 50
-  hidden_size = 130
+  hidden_size = 115
   num_steps = 10
   max_epochs = 20
   early_stopping = 3
-  dropout = 0.95
-  lr = 0.0015
+  dropout = 0.975
+  lr = 0.0018
 
 class RNNLM_Model(LanguageModel):
 
@@ -311,7 +311,7 @@ def generate_text(session, model, config, starting_text='<eos>',
   for i in xrange(stop_length):
     ### YOUR CODE HERE
     feed_dict = {
-        model.input_placeholder: tf.reshape(tokens[i], (1, 1)),
+        model.input_placeholder: np.reshape(tokens[i], (1, 1)),
         model.initial_state: state,
         model.dropout_placeholder: 1.0,
         }
