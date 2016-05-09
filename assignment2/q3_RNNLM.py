@@ -249,7 +249,7 @@ class RNNLM_Model(LanguageModel):
     self.final_state = self.initial_state
     for t in inputs:
         self.final_state = tf.sigmoid(tf.matmul(self.final_state, H) + \
-            tf.matmul(tf.nn.dropout(t, self.dropout_placeholder), I) + b1)
+            tf.matmul(tf.nn.dropout(t, self.dropout_placeholder), I) + b_1)
         rnn_outputs.append(tf.nn.dropout(self.final_state, self.dropout_placeholder))
     ### END YOUR CODE
     return rnn_outputs
