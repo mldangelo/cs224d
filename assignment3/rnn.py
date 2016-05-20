@@ -69,11 +69,19 @@ class RNN_Model():
         '''
         with tf.variable_scope('Composition'):
             ### YOUR CODE HERE
-            pass
+            # self.W1 = tf.placeholder(tf.int32, shape=(None, self.config.window_size))
+            # self.b1 = tf.placeholder(tf.float32, shape=(None, self.config.label_size))
+            L = tf.get_variable("Embedding", (len(self.vocab), self.config.embed_size))
+            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
+            b1 = tf.get_variable("b1", (1, self.config.embed_size))
+            # self.dropout_placeholder = tf.placeholder(tf.float32)
+
+
             ### END YOUR CODE
         with tf.variable_scope('Projection'):
             ### YOUR CODE HERE
-            pass
+            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
+            bs = tf.get_variable("b1", (1, self.config.label_size))
             ### END YOUR CODE
 
     def add_model(self, node):
@@ -93,7 +101,9 @@ class RNN_Model():
         """
         with tf.variable_scope('Composition', reuse=True):
             ### YOUR CODE HERE
-            pass
+            L = tf.get_variable("Embedding", (len(self.vocab), self.config.embed_size))
+            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
+            b1 = tf.get_variable("b1", (1, self.config.embed_size))
             ### END YOUR CODE
 
 
@@ -101,13 +111,15 @@ class RNN_Model():
         curr_node_tensor = None
         if node.isLeaf:
             ### YOUR CODE HERE
-            pass
+            curr_node_tensor = tf.reshape(tf.gather(L, (self.vocab.encode(node.word))), (1, self.config.embed_size))
+            self.curr_node_tensor = curr_node_tensor
             ### END YOUR CODE
         else:
             node_tensors.update(self.add_model(node.left))
             node_tensors.update(self.add_model(node.right))
             ### YOUR CODE HERE
-            pass
+            concated_tensors = tf.concat(1, [node_tensors[node.left], node_tensors[node.right]])
+            curr_node_tensor = tf.matmul(concated_tensors, W1) + b1
             ### END YOUR CODE
         node_tensors[node] = curr_node_tensor
         return node_tensors
@@ -123,7 +135,10 @@ class RNN_Model():
         """
         logits = None
         ### YOUR CODE HERE
-        pass
+        with tf.variable_scope('Projection', reuse=True):
+            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
+            bs = tf.get_variable("b1", (1, self.config.label_size))
+        logits = tf.matmul(node_tensors, U) + bs
         ### END YOUR CODE
         return logits
 
@@ -140,7 +155,15 @@ class RNN_Model():
         """
         loss = None
         # YOUR CODE HERE
-        pass
+        with tf.variable_scope('Composition', reuse=True):
+            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
+        with tf.variable_scope('Projection', reuse=True):
+            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
+
+        loss_reg = tf.nn.l2_loss(W1) + tf.nn.l2_loss(U)
+        loss_ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels)
+        loss_ce_sum = tf.reduce_sum(loss_ce)
+        loss = loss_ce_sum + self.config.l2 * loss_reg
         # END YOUR CODE
         return loss
 
@@ -165,7 +188,8 @@ class RNN_Model():
         """
         train_op = None
         # YOUR CODE HERE
-        pass
+        opt = tf.train.GradientDescentOptimizer(self.config.lr)
+        train_op = opt.minimize(loss)
         # END YOUR CODE
         return train_op
 
@@ -179,7 +203,7 @@ class RNN_Model():
         """
         predictions = None
         # YOUR CODE HERE
-        pass
+        predictions = tf.argmax(y, 1)
         # END YOUR CODE
         return predictions
 
