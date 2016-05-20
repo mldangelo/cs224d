@@ -9,6 +9,7 @@ import shutil
 import tensorflow as tf
 import tree as tr
 from utils import Vocab
+from collections import OrderedDict
 
 
 RESET_AFTER = 50
@@ -75,8 +76,6 @@ class RNN_Model():
             W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
             b1 = tf.get_variable("b1", (1, self.config.embed_size))
             # self.dropout_placeholder = tf.placeholder(tf.float32)
-
-
             ### END YOUR CODE
         with tf.variable_scope('Projection'):
             ### YOUR CODE HERE
@@ -90,7 +89,7 @@ class RNN_Model():
         Hint: Refer to tree.py and vocab.py before you start. Refer to
               the model's vocab with self.vocab
         Hint: Reuse the "Composition" variable_scope here
-        Hint: Store a node's vector representation in node.tensor so it can be
+        Hint: Store a node's vector representation in dictionary indexed by the node so it can be
               used by it's parent
         Hint: If node is a leaf node, it's vector representation is just that of the
               word vector (see tf.gather()).
@@ -107,7 +106,7 @@ class RNN_Model():
             ### END YOUR CODE
 
 
-        node_tensors = dict()
+        node_tensors = OrderedDict()
         curr_node_tensor = None
         if node.isLeaf:
             ### YOUR CODE HERE
@@ -120,6 +119,7 @@ class RNN_Model():
             ### YOUR CODE HERE
             concated_tensors = tf.concat(1, [node_tensors[node.left], node_tensors[node.right]])
             curr_node_tensor = tf.matmul(concated_tensors, W1) + b1
+            curr_node_tensor = tf.nn.relu(curr_node_tensor)
             ### END YOUR CODE
         node_tensors[node] = curr_node_tensor
         return node_tensors
@@ -234,6 +234,7 @@ class RNN_Model():
     def run_epoch(self, new_model = False, verbose=True):
         step = 0
         loss_history = []
+        new_model = False
         while step < len(self.train_data):
             with tf.Graph().as_default(), tf.Session() as sess:
                 self.add_model_vars()
@@ -351,7 +352,8 @@ def test_RNN():
 
     print 'Test'
     print '=-=-='
-    predictions, _ = model.predict(model.test_data, './weights/%s'%model.config.model_name)
+    predictions, _ = model.predict(model.test_data, './weights/%s.temp'%model.config.model_name)
+    # predictions, _ = model.predict(model.test_data, './weights/%s'%model.config.model_name)
     labels = [t.root.label for t in model.test_data]
     test_acc = np.equal(predictions, labels).mean()
     print 'Test acc: {}'.format(test_acc)
