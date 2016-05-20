@@ -16,19 +16,20 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-RESET_AFTER = 50
+RESET_AFTER = 100
 class Config(object):
     """Holds model hyperparams and data information.
        Model objects are passed a Config() object at instantiation.
     """
-    embed_size = 35
+    embed_size = 64
     label_size = 2
     early_stopping = 2
     anneal_threshold = 0.99
     anneal_by = 1.5
     max_epochs = 30
-    lr = 0.01
-    l2 = 0.02
+    lr = 0.015
+    l2 = 0.025
+    dropout = .8
     model_name = 'rnn_embed=%d_l2=%f_lr=%f.weights'%(embed_size, l2, lr)
 
 
@@ -124,6 +125,7 @@ class RNN_Model():
             concated_tensors = tf.concat(1, [node_tensors[node.left], node_tensors[node.right]])
             curr_node_tensor = tf.matmul(concated_tensors, W1) + b1
             curr_node_tensor = tf.nn.relu(curr_node_tensor)
+            curr_node_tensor = tf.nn.dropout(curr_node_tensor,self.config.dropout)
             ### END YOUR CODE
         node_tensors[node] = curr_node_tensor
         return node_tensors
@@ -143,6 +145,8 @@ class RNN_Model():
             U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
             bs = tf.get_variable("b1", (1, self.config.label_size))
         logits = tf.matmul(node_tensors, U) + bs
+        # logits = tf.nn.relu(logits)
+        # logits = tf.nn.dropout(logits,self.config.dropout)
         ### END YOUR CODE
         return logits
 

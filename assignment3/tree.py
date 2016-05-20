@@ -79,7 +79,7 @@ class Tree:
 def leftTraverse(node, nodeFn=None, args=None):
     """
     Recursive function traverses tree
-    from left to right. 
+    from left to right.
     Calls nodeFn at each node
     """
     if node is None:
@@ -123,15 +123,15 @@ def simplified_data(num_train, num_dev, num_test):
     rndstate = random.getstate()
     random.seed(0)
     trees = loadTrees('train') + loadTrees('dev') + loadTrees('test')
-    
+
     #filter extreme trees
-    pos_trees = [t for t in trees if t.root.label==4]
-    neg_trees = [t for t in trees if t.root.label==0]
+    pos_trees = [t for t in trees if t.root.label==4 or t.root.label==5]
+    neg_trees = [t for t in trees if t.root.label==0 or t.root.label==1]
 
     #binarize labels
     binarize_labels(pos_trees)
     binarize_labels(neg_trees)
-    
+
     #split into train, dev, test
     print len(pos_trees), len(neg_trees)
     pos_trees = sorted(pos_trees, key=lambda t: len(t.get_words()))
