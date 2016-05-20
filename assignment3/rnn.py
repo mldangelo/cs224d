@@ -11,6 +11,9 @@ import tree as tr
 from utils import Vocab
 from collections import OrderedDict
 
+# Remove later
+import matplotlib as mpl
+mpl.use('Agg')
 
 RESET_AFTER = 50
 class Config(object):
