@@ -16,7 +16,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-RESET_AFTER = 100
+RESET_AFTER = 50
 class Config(object):
     """Holds model hyperparams and data information.
        Model objects are passed a Config() object at instantiation.
@@ -242,7 +242,7 @@ class RNN_Model():
     def run_epoch(self, new_model = False, verbose=True):
         step = 0
         loss_history = []
-        new_model = False
+        new_model = True
         while step < len(self.train_data):
             with tf.Graph().as_default(), tf.Session() as sess:
                 self.add_model_vars()

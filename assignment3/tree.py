@@ -125,8 +125,8 @@ def simplified_data(num_train, num_dev, num_test):
     trees = loadTrees('train') + loadTrees('dev') + loadTrees('test')
 
     #filter extreme trees
-    pos_trees = [t for t in trees if t.root.label==4 or t.root.label==5]
-    neg_trees = [t for t in trees if t.root.label==0 or t.root.label==1]
+    pos_trees = [t for t in trees if t.root.label==4]
+    neg_trees = [t for t in trees if t.root.label==0]
 
     #binarize labels
     binarize_labels(pos_trees)
