@@ -21,14 +21,14 @@ class Config(object):
     """Holds model hyperparams and data information.
        Model objects are passed a Config() object at instantiation.
     """
-    embed_size = 64
+    embed_size = 32
     label_size = 2
     early_stopping = 2
     anneal_threshold = 0.99
     anneal_by = 1.5
     max_epochs = 30
-    lr = 0.015
-    l2 = 0.025
+    lr = 0.05
+    l2 = 0.03
     dropout = .8
     model_name = 'rnn_embed=%d_l2=%f_lr=%f.weights'%(embed_size, l2, lr)
 
@@ -73,6 +73,10 @@ class RNN_Model():
         Hint: Use a variable_scope "Composition" for the composition layer, and
               "Projection") for the linear transformations preceding the softmax.
         '''
+        # TODO Remove this
+        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.config.lr)
+        #####
+
         with tf.variable_scope('Composition'):
             ### YOUR CODE HERE
             # self.W1 = tf.placeholder(tf.int32, shape=(None, self.config.window_size))
@@ -87,6 +91,11 @@ class RNN_Model():
             U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
             bs = tf.get_variable("b1", (1, self.config.label_size))
             ### END YOUR CODE
+
+        dummy_total = tf.constant(0.0)
+        for v in tf.trainable_variables(): dummy_total +=tf.reduce_sum(v)
+        self.dummy_minimizer = self.optimizer.minimize(dummy_total)
+
 
     def add_model(self, node):
         """Recursively build the model to compute the phrase embeddings in the tree
@@ -196,8 +205,9 @@ class RNN_Model():
         """
         train_op = None
         # YOUR CODE HERE
-        opt = tf.train.GradientDescentOptimizer(self.config.lr)
-        train_op = opt.minimize(loss)
+        train_op = self.optimizer.minimize(loss)
+        # opt = tf.train.GradientDescentOptimizer(self.config.lr)
+        # train_op = opt.minimize(loss)
         # END YOUR CODE
         return train_op
 
