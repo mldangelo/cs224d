@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import math
 import time
 import itertools
@@ -14,6 +14,7 @@ from collections import OrderedDict
 # Remove later
 import matplotlib as mpl
 mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 RESET_AFTER = 50
 class Config(object):
