@@ -21,15 +21,14 @@ class Config(object):
     """Holds model hyperparams and data information.
        Model objects are passed a Config() object at instantiation.
     """
-    embed_size = 32
+    embed_size = 35
     label_size = 2
     early_stopping = 2
     anneal_threshold = 0.99
     anneal_by = 1.5
     max_epochs = 30
-    lr = 0.05
-    l2 = 0.03
-    dropout = .8
+    lr = 0.01
+    l2 = 0.02
     model_name = 'rnn_embed=%d_l2=%f_lr=%f.weights'%(embed_size, l2, lr)
 
 
@@ -79,12 +78,9 @@ class RNN_Model():
 
         with tf.variable_scope('Composition'):
             ### YOUR CODE HERE
-            # self.W1 = tf.placeholder(tf.int32, shape=(None, self.config.window_size))
-            # self.b1 = tf.placeholder(tf.float32, shape=(None, self.config.label_size))
             L = tf.get_variable("Embedding", (len(self.vocab), self.config.embed_size))
             W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
             b1 = tf.get_variable("b1", (1, self.config.embed_size))
-            # self.dropout_placeholder = tf.placeholder(tf.float32)
             ### END YOUR CODE
         with tf.variable_scope('Projection'):
             ### YOUR CODE HERE
@@ -92,6 +88,7 @@ class RNN_Model():
             bs = tf.get_variable("b1", (1, self.config.label_size))
             ### END YOUR CODE
 
+        # TODO Remove later
         dummy_total = tf.constant(0.0)
         for v in tf.trainable_variables(): dummy_total +=tf.reduce_sum(v)
         self.dummy_minimizer = self.optimizer.minimize(dummy_total)
@@ -154,8 +151,6 @@ class RNN_Model():
             U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
             bs = tf.get_variable("b1", (1, self.config.label_size))
         logits = tf.matmul(node_tensors, U) + bs
-        # logits = tf.nn.relu(logits)
-        # logits = tf.nn.dropout(logits,self.config.dropout)
         ### END YOUR CODE
         return logits
 
