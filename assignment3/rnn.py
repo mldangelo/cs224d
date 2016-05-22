@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # comment out
 import math
 import time
 import itertools
@@ -12,9 +12,9 @@ from utils import Vocab
 from collections import OrderedDict
 
 # Remove later
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# mpl.use('Agg')
+# import matplotlib.pyplot as plt
 
 RESET_AFTER = 50
 class Config(object):
@@ -73,25 +73,25 @@ class RNN_Model():
               "Projection") for the linear transformations preceding the softmax.
         '''
         # TODO Remove this
-        self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.config.lr)
+        # self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.config.lr)
         #####
 
         with tf.variable_scope('Composition'):
             ### YOUR CODE HERE
-            L = tf.get_variable("Embedding", (len(self.vocab), self.config.embed_size))
-            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
-            b1 = tf.get_variable("b1", (1, self.config.embed_size))
+            L = tf.get_variable('Embedding', shape=(len(self.vocab), self.config.embed_size))
+            W1 = tf.get_variable('W1', shape=(2 * self.config.embed_size, self.config.embed_size))
+            b1 = tf.get_variable('b1', shape=(1, self.config.embed_size))
             ### END YOUR CODE
         with tf.variable_scope('Projection'):
             ### YOUR CODE HERE
-            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
-            bs = tf.get_variable("b1", (1, self.config.label_size))
+            U = tf.get_variable('U', shape=(self.config.embed_size, self.config.label_size))
+            bs = tf.get_variable('bs', shape=(1, self.config.label_size))
             ### END YOUR CODE
 
         # TODO Remove later
-        dummy_total = tf.constant(0.0)
-        for v in tf.trainable_variables(): dummy_total +=tf.reduce_sum(v)
-        self.dummy_minimizer = self.optimizer.minimize(dummy_total)
+        # dummy_total = tf.constant(0.0)
+        # for v in tf.trainable_variables(): dummy_total +=tf.reduce_sum(v)
+        # self.dummy_minimizer = self.optimizer.minimize(dummy_total)
 
 
     def add_model(self, node):
@@ -111,9 +111,9 @@ class RNN_Model():
         """
         with tf.variable_scope('Composition', reuse=True):
             ### YOUR CODE HERE
-            L = tf.get_variable("Embedding", (len(self.vocab), self.config.embed_size))
-            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
-            b1 = tf.get_variable("b1", (1, self.config.embed_size))
+            L = tf.get_variable('Embedding', shape=(len(self.vocab), self.config.embed_size))
+            W1 = tf.get_variable('W1', shape=(2 * self.config.embed_size, self.config.embed_size))
+            b1 = tf.get_variable('b1', shape=(1, self.config.embed_size))
             ### END YOUR CODE
 
 
@@ -121,17 +121,16 @@ class RNN_Model():
         curr_node_tensor = None
         if node.isLeaf:
             ### YOUR CODE HERE
-            curr_node_tensor = tf.reshape(tf.gather(L, (self.vocab.encode(node.word))), (1, self.config.embed_size))
-            self.curr_node_tensor = curr_node_tensor
+            self.curr_node_tensor = tf.reshape(
+                tf.gather(L, (self.vocab.encode(node.word))),
+                shape=(1, self.config.embed_size))
             ### END YOUR CODE
         else:
             node_tensors.update(self.add_model(node.left))
             node_tensors.update(self.add_model(node.right))
             ### YOUR CODE HERE
-            concated_tensors = tf.concat(1, [node_tensors[node.left], node_tensors[node.right]])
-            curr_node_tensor = tf.matmul(concated_tensors, W1) + b1
-            curr_node_tensor = tf.nn.relu(curr_node_tensor)
-            curr_node_tensor = tf.nn.dropout(curr_node_tensor,self.config.dropout)
+            concat = tf.concat(1, [node_tensors[node.left], node_tensors[node.right]])
+            curr_node_tensor = tf.nn.relu(tf.matmul(concat, W1) + b1)
             ### END YOUR CODE
         node_tensors[node] = curr_node_tensor
         return node_tensors
@@ -148,8 +147,8 @@ class RNN_Model():
         logits = None
         ### YOUR CODE HERE
         with tf.variable_scope('Projection', reuse=True):
-            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
-            bs = tf.get_variable("b1", (1, self.config.label_size))
+            U = tf.get_variable('U', shape=(self.config.embed_size, self.config.label_size))
+            bs = tf.get_variable('bs', shape=(1, self.config.label_size))
         logits = tf.matmul(node_tensors, U) + bs
         ### END YOUR CODE
         return logits
@@ -168,14 +167,12 @@ class RNN_Model():
         loss = None
         # YOUR CODE HERE
         with tf.variable_scope('Composition', reuse=True):
-            W1 = tf.get_variable("W1", (2 * self.config.embed_size, self.config.embed_size))
+            W1 = tf.get_variable('W1', shape=(2 * self.config.embed_size, self.config.embed_size))
         with tf.variable_scope('Projection', reuse=True):
-            U = tf.get_variable("U", (self.config.embed_size, self.config.label_size))
-
-        loss_reg = tf.nn.l2_loss(W1) + tf.nn.l2_loss(U)
-        loss_ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels)
-        loss_ce_sum = tf.reduce_sum(loss_ce)
-        loss = loss_ce_sum + self.config.l2 * loss_reg
+            U = tf.get_variable('U', shape=(self.config.embed_size, self.config.label_size))
+        reg = tf.nn.l2_loss(W1) + tf.nn.l2_loss(U)
+        ce = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels))
+        loss = ce + self.config.l2 * reg
         # END YOUR CODE
         return loss
 
@@ -200,9 +197,7 @@ class RNN_Model():
         """
         train_op = None
         # YOUR CODE HERE
-        train_op = self.optimizer.minimize(loss)
-        # opt = tf.train.GradientDescentOptimizer(self.config.lr)
-        # train_op = opt.minimize(loss)
+        train_op = tf.train.GradientDescentOptimizer(self.config.lr).minimize(loss)
         # END YOUR CODE
         return train_op
 
