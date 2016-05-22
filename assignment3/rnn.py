@@ -121,7 +121,7 @@ class RNN_Model():
         curr_node_tensor = None
         if node.isLeaf:
             ### YOUR CODE HERE
-            self.curr_node_tensor = tf.reshape(
+            curr_node_tensor = tf.reshape(
                 tf.gather(L, (self.vocab.encode(node.word))),
                 shape=(1, self.config.embed_size))
             ### END YOUR CODE
@@ -242,7 +242,7 @@ class RNN_Model():
     def run_epoch(self, new_model = False, verbose=True):
         step = 0
         loss_history = []
-        new_model = True
+        new_model = False
         while step < len(self.train_data):
             with tf.Graph().as_default(), tf.Session() as sess:
                 self.add_model_vars()
